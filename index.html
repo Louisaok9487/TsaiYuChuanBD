@@ -185,10 +185,8 @@
         }
     </style>
 </head>
-<!-- BUG FIX: Added padding-bottom (pb-32) to create space for the button above the fence -->
 <body class="flex flex-col items-center justify-center min-h-screen p-4 pb-32">
 
-    <!-- Feature Update: Top Lantern Row -->
     <div class="lantern-row">
         <div class="lantern"><div class="lantern-line"></div></div>
         <div class="lantern"><div class="lantern-line"></div></div>
@@ -207,18 +205,15 @@
             <div class="wheel-center"></div>
         </div>
         
-        <!-- BUG FIX: Increased z-index to ensure button is above the fence -->
         <button id="restartButton" class="restart-button text-2xl font-bold py-3 px-8 rounded-full mt-12 z-30">
             開始旋轉
         </button>
     </main>
 
-    <!-- Feature Update: Temple Fence -->
     <div class="fence-container">
         <div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div>
     </div>
 
-    <!-- 結果彈出視窗 -->
     <div id="resultModal" class="fixed inset-0 z-50 flex items-center justify-center hidden result-modal">
         <div class="result-content rounded-2xl p-8 text-center relative max-w-sm mx-auto">
             <p class="text-xl text-amber-200 mb-4">恭喜！天選之人！</p>
@@ -255,14 +250,13 @@
         let audioInitialized = false;
         let spinSoundInterval;
 
-        // --- Sound Effect Update: Money/Slot machine sounds ---
-        const coinSound = new Tone.MetalSynth({
-            frequency: 400,
-            envelope: { attack: 0.001, decay: 0.1, release: 0.1 },
-            harmonicity: 3.1,
-            modulationIndex: 32,
-            resonance: 4000,
-            octaves: 1.5
+        // --- Sound Effect Update: New spinning sound ---
+        const tickSound = new Tone.FMSynth({
+            volume: -10,
+            harmonicity: 2,
+            modulationIndex: 10,
+            envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.1 },
+            modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.5 }
         }).toDestination();
 
         const kaChingSound = new Tone.PolySynth(Tone.MetalSynth, {
@@ -275,7 +269,7 @@
         }).toDestination();
 
         function playSpinSound() {
-            coinSound.triggerAttack();
+            tickSound.triggerAttackRelease("C5", "32n");
         }
 
         function playSuccessSound() {
@@ -330,7 +324,7 @@
             playSpinSound();
             restartButton.textContent = '旋轉中...';
             restartButton.disabled = true;
-            spinSoundInterval = setInterval(playSpinSound, 200);
+            spinSoundInterval = setInterval(playSpinSound, 150);
 
             const randomSpins = Math.random() * 5 + 5;
             const targetAngle = Math.random() * 2 * Math.PI;
