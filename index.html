@@ -185,7 +185,8 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<!-- BUG FIX: Added padding-bottom (pb-32) to create space for the button above the fence -->
+<body class="flex flex-col items-center justify-center min-h-screen p-4 pb-32">
 
     <!-- Feature Update: Top Lantern Row -->
     <div class="lantern-row">
@@ -206,7 +207,8 @@
             <div class="wheel-center"></div>
         </div>
         
-        <button id="restartButton" class="restart-button text-2xl font-bold py-3 px-8 rounded-full mt-12 z-10">
+        <!-- BUG FIX: Increased z-index to ensure button is above the fence -->
+        <button id="restartButton" class="restart-button text-2xl font-bold py-3 px-8 rounded-full mt-12 z-30">
             開始旋轉
         </button>
     </main>
