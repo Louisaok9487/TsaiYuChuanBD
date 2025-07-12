@@ -251,7 +251,8 @@
         let spinSoundInterval;
 
         // --- Sound Effect Update: New spinning sound ---
-        const tickSound = new Tone.FMSynth({
+        // ERROR FIX: Changed tickSound to a PolySynth to avoid re-triggering errors on a single synth instance.
+        const tickSound = new Tone.PolySynth(Tone.FMSynth, {
             volume: -10,
             harmonicity: 2,
             modulationIndex: 10,
