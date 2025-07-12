@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔡玉娟生日快樂之命運轉盤好好玩</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background: radial-gradient(ellipse at center, #8a2be2, #dc143c);
+            color: #fde047; /* yellow-400 */
+            overflow-x: hidden; /* 防止柵欄造成水平滾動 */
+        }
+        .temple-title {
+            text-shadow: 2px 2px 4px #000, 0 0 10px #ffc700, 0 0 20px #ff8000;
+            color: #fef2bf; /* amber-100 */
+        }
+        .wheel-container {
+            position: relative;
+            width: 90vw;
+            height: 90vw;
+            max-width: 500px;
+            max-height: 500px;
+            margin: 0 auto;
+            z-index: 10;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.7), inset 0 0 15px rgba(0,0,0,0.5);
+            border: 5px solid #854d0e; /* amber-800 */
+        }
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 40px solid #dc2626; /* red-600 */
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
+            z-index: 10;
+        }
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: #b91c1c; /* red-700 */
+            border-radius: 50%;
+            border: 5px solid #fde047; /* yellow-400 */
+            box-shadow: 0 0 10px #000;
+            z-index: 11;
+        }
+        .restart-button {
+            background: linear-gradient(145deg, #ef4444, #b91c1c);
+            border: 2px solid #fde047;
+            color: #fef2bf;
+            text-shadow: 1px 1px 2px #000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s ease-in-out;
+        }
+        .restart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.2);
+        }
+        .restart-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2);
+        }
+        /* Lantern Styles */
+        .lantern-row {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1;
+        }
+        .lantern {
+            width: 60px;
+            height: 90px;
+            background-color: #dc2626;
+            border-radius: 45% 45% 50% 50%;
+            border: 2px solid #fde047;
+            box-shadow: 0 0 20px #dc2626, inset 0 0 10px #854d0e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            position: relative;
+        }
+        .lantern::before, .lantern::after {
+            content: '';
+            display: block;
+            width: 65px;
+            height: 8px;
+            background-color: #854d0e;
+            border-radius: 5px;
+        }
+        .lantern-line {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            width: 2px;
+            height: 30px;
+            background: #854d0e;
+            transform: translateX(-50%);
+        }
+        /* Fence Styles */
+        .fence-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .fence-post {
+            width: 10%;
+            height: 100%;
+            background: #b91c1c;
+            border-top: 5px solid #854d0e;
+            border-left: 2px solid #854d0e;
+            border-right: 2px solid #854d0e;
+            box-shadow: inset 0 5px 5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .fence-post::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: -1px;
+            right: -1px;
+            height: 10px;
+            background-image: repeating-linear-gradient(
+                -45deg,
+                #34d399,
+                #34d399 10px,
+                #60a5fa 10px,
+                #60a5fa 20px,
+                #facc15 20px,
+                #facc15 30px
+            );
+        }
+        .result-modal {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .result-content {
+            background: #422006;
+            border: 5px solid #fde047;
+            box-shadow: 0 0 30px #fde047;
+        }
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: hsl(var(--hue), 100%, 70%);
+            border-radius: 50%;
+            opacity: 1;
+            animation: firework-explode 0.8s ease-out forwards;
+        }
+        @keyframes firework-explode {
+            to {
+                transform: var(--transform-val);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Feature Update: Top Lantern Row -->
+    <div class="lantern-row">
+        <div class="lantern"><div class="lantern-line"></div></div>
+        <div class="lantern"><div class="lantern-line"></div></div>
+        <div class="lantern"><div class="lantern-line"></div></div>
+    </div>
+
+    <header class="text-center my-8 z-10">
+        <h1 class="text-4xl md:text-6xl font-bold temple-title">蔡玉娟生日快樂</h1>
+        <h2 class="text-2xl md:text-3xl mt-2 temple-title">之命運轉盤好好玩</h2>
+    </header>
+
+    <main class="flex flex-col items-center justify-center w-full">
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas"></canvas>
+            <div class="wheel-center"></div>
+        </div>
+        
+        <button id="restartButton" class="restart-button text-2xl font-bold py-3 px-8 rounded-full mt-12 z-10">
+            開始旋轉
+        </button>
+    </main>
+
+    <!-- Feature Update: Temple Fence -->
+    <div class="fence-container">
+        <div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div><div class="fence-post"></div>
+    </div>
+
+    <!-- 結果彈出視窗 -->
+    <div id="resultModal" class="fixed inset-0 z-50 flex items-center justify-center hidden result-modal">
+        <div class="result-content rounded-2xl p-8 text-center relative max-w-sm mx-auto">
+            <p class="text-xl text-amber-200 mb-4">恭喜！天選之人！</p>
+            <p class="text-4xl font-bold text-yellow-300" id="resultText"></p>
+            <p class="text-lg text-amber-200 mt-4">請開始你的家事任務！</p>
+            <button id="closeModalButton" class="restart-button text-xl font-bold py-2 px-6 rounded-full mt-8">
+                關閉
+            </button>
+        </div>
+    </div>
+    
+    <div id="fireworksContainer" class="absolute inset-0 pointer-events-none z-50"></div>
+
+
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const restartButton = document.getElementById('restartButton');
+        const resultModal = document.getElementById('resultModal');
+        const resultText = document.getElementById('resultText');
+        const closeModalButton = document.getElementById('closeModalButton');
+        const fireworksContainer = document.getElementById('fireworksContainer');
+
+        const options = [
+            "幫忙掃地", "幫忙拖地", "倒垃圾", "洗浴室", "洗碗",
+            "按摩十分鐘", "準備水果", "擦窗戶", "整理客廳", "買菜"
+        ];
+        const numOptions = options.length;
+        const arcSize = 2 * Math.PI / numOptions;
+        const colors = ["#b91c1c", "#ca8a04", "#c2410c", "#a16207"];
+
+        let currentRotation = 0;
+        let isSpinning = false;
+        let audioInitialized = false;
+        let spinSoundInterval;
+
+        // --- Sound Effect Update: Money/Slot machine sounds ---
+        const coinSound = new Tone.MetalSynth({
+            frequency: 400,
+            envelope: { attack: 0.001, decay: 0.1, release: 0.1 },
+            harmonicity: 3.1,
+            modulationIndex: 32,
+            resonance: 4000,
+            octaves: 1.5
+        }).toDestination();
+
+        const kaChingSound = new Tone.PolySynth(Tone.MetalSynth, {
+            volume: -10,
+            envelope: { attack: 0.001, decay: 0.4, release: 0.2 },
+            harmonicity: 5.1,
+            modulationIndex: 32,
+            resonance: 4000,
+            octaves: 1.5,
+        }).toDestination();
+
+        function playSpinSound() {
+            coinSound.triggerAttack();
+        }
+
+        function playSuccessSound() {
+            const now = Tone.now();
+            kaChingSound.triggerAttackRelease("C5", "8n", now);
+            kaChingSound.triggerAttackRelease("G5", "8n", now + 0.1);
+        }
+        // --- End Sound Effect Setup ---
+
+        function drawWheel() {
+            const size = canvas.width;
+            const center = size / 2;
+            if (center <= 10) return;
+
+            ctx.clearRect(0, 0, size, size);
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.rotate(currentRotation);
+            
+            for (let i = 0; i < numOptions; i++) {
+                const angle = i * arcSize;
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, center - 10, angle, angle + arcSize);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.save();
+                ctx.fillStyle = "#fef2bf";
+                ctx.font = `bold ${size * 0.05}px 'Noto Serif TC', serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                const textAngle = angle + arcSize / 2;
+                ctx.rotate(textAngle);
+                ctx.fillText(options[i], center * 0.65, 0);
+                ctx.restore();
+            }
+            ctx.restore();
+        }
+
+        async function spin() {
+            if (isSpinning) return;
+            if (!audioInitialized) {
+                await Tone.start();
+                audioInitialized = true;
+                console.log('Audio context started');
+            }
+            isSpinning = true;
+            playSpinSound();
+            restartButton.textContent = '旋轉中...';
+            restartButton.disabled = true;
+            spinSoundInterval = setInterval(playSpinSound, 200);
+
+            const randomSpins = Math.random() * 5 + 5;
+            const targetAngle = Math.random() * 2 * Math.PI;
+            const totalRotation = randomSpins * 2 * Math.PI + targetAngle;
+            
+            canvas.style.transition = 'transform 5s cubic-bezier(0.25, 1, 0.5, 1)';
+            canvas.style.transform = `rotate(${totalRotation}rad)`;
+
+            canvas.addEventListener('transitionend', () => {
+                clearInterval(spinSoundInterval);
+                const finalRotation = totalRotation % (2 * Math.PI);
+                canvas.style.transition = 'none';
+                canvas.style.transform = `rotate(${finalRotation}rad)`;
+                currentRotation = finalRotation;
+                
+                const rawAngle = 1.5 * Math.PI - finalRotation;
+                const normalizedAngle = (rawAngle + 2 * Math.PI) % (2 * Math.PI);
+                const selectedIndex = Math.floor(normalizedAngle / arcSize);
+                
+                showResult(options[selectedIndex]);
+                isSpinning = false;
+                restartButton.textContent = '重新開始';
+                restartButton.disabled = false;
+            }, { once: true });
+        }
+        
+        function showResult(result) {
+            resultText.textContent = result;
+            resultModal.classList.remove('hidden');
+            playSuccessSound();
+            launchFireworks();
+        }
+
+        function launchFireworks() {
+            fireworksContainer.innerHTML = '';
+            const numFireworks = 30;
+            for (let i = 0; i < numFireworks; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                const modalRect = resultModal.querySelector('.result-content').getBoundingClientRect();
+                const startX = modalRect.left + modalRect.width / 2;
+                const startY = modalRect.top + modalRect.height / 2;
+                firework.style.left = `${startX}px`;
+                firework.style.top = `${startY}px`;
+                const hue = Math.random() * 360;
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 150 + 50;
+                const translateX = Math.cos(angle) * distance;
+                const translateY = Math.sin(angle) * distance;
+                firework.style.setProperty('--hue', hue);
+                firework.style.setProperty('--transform-val', `translate(${translateX}px, ${translateY}px)`);
+                fireworksContainer.appendChild(firework);
+            }
+        }
+
+        function resizeCanvas() {
+            const container = document.querySelector('.wheel-container');
+            const size = Math.min(container.clientWidth, container.clientHeight);
+            canvas.width = size;
+            canvas.height = size;
+            drawWheel();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        canvas.addEventListener('click', spin);
+        restartButton.addEventListener('click', spin);
+        closeModalButton.addEventListener('click', () => {
+            resultModal.classList.add('hidden');
+            fireworksContainer.innerHTML = '';
+        });
+
+        resizeCanvas();
+    </script>
+
+</body>
+</html>
